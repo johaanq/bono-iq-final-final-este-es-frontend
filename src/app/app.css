@@ -1,0 +1,11 @@
+
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.app-content {
+  flex: 1 1 auto;
+  background: #f5f6fa;
+  min-width: 0;
+}

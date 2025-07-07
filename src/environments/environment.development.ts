@@ -10,7 +10,7 @@ export const environment = {
   },
 
   // Trabajar de manera local
-  baseURL: 'http://localhost:8080/api/v1',
+  baseURL: 'https://bono-iq-backend.onrender.com/api/v1',
 
   //urls for the different endpoints
   authenticationURL: '/authentication',

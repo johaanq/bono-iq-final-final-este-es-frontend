@@ -7,6 +7,7 @@ import { ClientService } from '../../../users/services/client.service';
 import { ConfigurationService } from '../../../users/services/configuration.service';
 import {BondCalculatorService} from '../../../utils/bond-calcultations';
 import {MatSnackBar} from '@angular/material/snack-bar';
+import { AbstractControl, ValidationErrors } from '@angular/forms';
 
 @Component({
   selector: 'app-bond-form',
@@ -33,25 +34,18 @@ export class BondForm implements OnInit {
   ];
 
   capitalizations = [
-    { value: "DAILY", label: "Diaria" },
-    { value: "MONTHLY", label: "Mensual" },
-    { value: "BIMONTHLY", label: "Bimestral" },
-    { value: "QUARTERLY", label: "Trimestral" },
     { value: "SEMIANNUAL", label: "Semestral" },
     { value: "ANNUAL", label: "Anual" },
   ];
 
   paymentFrequencies = [
-    { value: "MONTHLY", label: "Mensual" },
-    { value: "BIMONTHLY", label: "Bimestral" },
-    { value: "QUARTERLY", label: "Trimestral" },
-    { value: "SEMIANNUAL", label: "Semestral" },
-    { value: "ANNUAL", label: "Anual" },
+    { value: "QUARTERLY", label: "Trimestral", timesPerYear: 4 },
+    { value: "SEMIANNUAL", label: "Semestral", timesPerYear: 2 },
+    { value: "ANNUAL", label: "Anual", timesPerYear: 1 },
   ];
 
   graceTypes = [
     { value: "NO_GRACE", label: "Sin gracia" },
-    { value: "PARTIAL", label: "Parcial" },
     { value: "TOTAL", label: "Total" },
   ];
 
@@ -94,6 +88,12 @@ export class BondForm implements OnInit {
       }
     });
 
+    const today = new Date();
+    this.bondForm.get('issue_date')?.setValue(today);
+    this.bondForm.get('issue_date')?.disable();
+
+    this.bondForm.setValidators(this.bondTermValidator);
+
     // Cargar configuración y setear valores por defecto solo si NO es edit mode
     const clientId = this.clientService.getClientId();
     if (clientId && !this.isEditMode) {
@@ -130,7 +130,7 @@ export class BondForm implements OnInit {
       const issuance = +(n * 0.01).toFixed(2);      // 1%
       const placement = +(n * 0.005).toFixed(2);     // 0.5%
       const structuring = +(n * 0.003).toFixed(2);   // 0.3%
-      const cavali = +(n * 0.002).toFixed(2);        // 0.2%
+      const cavali = +(n * 0.0015).toFixed(2);        // 0.15%
       this.bondForm.patchValue({
         issuance_expenses: issuance,
         placement_expenses: placement,
@@ -138,6 +138,31 @@ export class BondForm implements OnInit {
         cavali_expenses: cavali,
       }, { emitEvent: false });
     });
+  }
+
+  bondTermValidator(form: AbstractControl): ValidationErrors | null {
+    const issue = form.get('issue_date')?.value;
+    const maturity = form.get('maturity_date')?.value;
+    if (issue && maturity) {
+      // Normaliza ambas fechas a solo año, mes y día
+      const start = new Date(issue);
+      const end = new Date(maturity);
+      start.setHours(0, 0, 0, 0);
+      end.setHours(0, 0, 0, 0);
+
+      // Calcula la diferencia en años exactos
+      const years = end.getFullYear() - start.getFullYear();
+      const isAnniversaryOrLater =
+        end.getMonth() > start.getMonth() ||
+        (end.getMonth() === start.getMonth() && end.getDate() >= start.getDate());
+
+      const totalYears = isAnniversaryOrLater ? years : years - 1;
+
+      if (totalYears < 1 || totalYears > 15) {
+        return { termOutOfRange: true };
+      }
+    }
+    return null;
   }
 
   loadBond(): void {

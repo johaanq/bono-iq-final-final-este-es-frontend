@@ -39,7 +39,6 @@ export class BondForm implements OnInit {
   ];
 
   paymentFrequencies = [
-    { value: "QUARTERLY", label: "Trimestral", timesPerYear: 4 },
     { value: "SEMIANNUAL", label: "Semestral", timesPerYear: 2 },
     { value: "ANNUAL", label: "Anual", timesPerYear: 1 },
   ];

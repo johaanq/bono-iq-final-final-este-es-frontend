@@ -118,7 +118,7 @@ export class BondCashflowCalculator {
           amortization: 0,
           installment: BondMetricsCalculator.round(initialInterest),
           finalBalance: finalBalanceTrue,
-          fixedInstallment: 0,
+          fixedInstallment: BondMetricsCalculator.round(initialInterest),
           expenses: 0,
           investorFlow: 0
         });
